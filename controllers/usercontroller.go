@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// register user
+// register new user
 func RegisterUser(context *gin.Context) {
 	var user models.User
 	if err := context.ShouldBindJSON(&user); err != nil {
@@ -27,6 +27,7 @@ func RegisterUser(context *gin.Context) {
 		context.Abort()
 		return
 	}
+	// return id email username
 	context.JSON(http.StatusCreated, gin.H{"userId": user.ID, "email": user.Email, "username": user.Username})
 
 }

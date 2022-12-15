@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// register user struct
 type User struct {
 	gorm.Model
 	Name     string `json:"name"`
@@ -13,6 +14,7 @@ type User struct {
 	Password string `json:"password"`
 }
 
+// Generate hash password
 func (user *User) HashPassword(password string) error {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 
@@ -24,6 +26,7 @@ func (user *User) HashPassword(password string) error {
 	return nil
 }
 
+// match provided login password into password
 func (user *User) CheckPassword(providedPassword string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(providedPassword))
 	if err != nil {

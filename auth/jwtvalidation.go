@@ -7,6 +7,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+// jwt key
 var jwtkey = []byte("thisissecretkey")
 
 type JWTClaim struct {
@@ -15,7 +16,9 @@ type JWTClaim struct {
 	jwt.StandardClaims
 }
 
+// Token genrate function
 func GenerateJWT(email string, username string) (tokenString string, err error) {
+	// token expire time 1 hour
 	expirationTime := time.Now().Add(1 * time.Hour)
 	claims := &JWTClaim{
 		Email:    email,
@@ -24,11 +27,13 @@ func GenerateJWT(email string, username string) (tokenString string, err error) 
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
+	// HS256 algorithm
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err = token.SignedString(jwtkey)
 	return
 }
 
+// token validation
 func ValidateToken(signedToken string) (err error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken,

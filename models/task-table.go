@@ -1,5 +1,6 @@
 package models
 
+// task table struct
 type Task struct {
 	ID         uint   `json:"id" gorm:"primary_key"`
 	TaskName   string `json:"task_name"`

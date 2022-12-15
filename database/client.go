@@ -6,30 +6,12 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	// "gorm.io/gorm"
 )
 
-// var Instance *gorm.DB
-
-// func Connect(connectionString string) {
-// 	Instance, dbError = gorm.Open(mysql.Open(connectionString), &gorm.Config{})
-// 	if dbError != nil {
-// 		log.Fatal(dbError)
-// 		panic("Cannot Connect to DB")
-// 	}
-// 	log.Println("Connected to DB")
-// }
-
-// func Migrate() {
-// 	Instance.AutoMigrate(&models.User{})
-// 	Instance.AutoMigrate(&models.Task{})
-// 	log.Println("DB Migration COmpleted")
-// }
-
+// DB instance
 var DB *gorm.DB
 
-// var dbError error
-
+// db connection function
 func ConnectDatabase() {
 	database, err := gorm.Open("mysql", "root:Vkm@12345@tcp(127.0.0.1:3306)/restfulapi?parseTime=true")
 
@@ -38,8 +20,10 @@ func ConnectDatabase() {
 		panic("Cannot Connect to DB")
 	}
 	log.Println("Connected to DB")
-	database.AutoMigrate(&models.User{})
 
+	// automigrate USers
+	database.AutoMigrate(&models.User{})
+	// automograte tasks
 	database.AutoMigrate(&models.Task{})
 
 	DB = database

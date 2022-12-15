@@ -10,21 +10,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Ping(context *gin.Context) {
-	context.JSON(http.StatusOK, gin.H{"message": "pong"})
-}
-
+// create task struct
 type CreateTaskInput struct {
 	TaskName   string `json:"task_name" binding:"required"`
 	TaskDetail string `json:"task_detail" binding:"required"`
 }
 
+// update task struct
 type UpdateTaskInput struct {
 	TaskName   string `json:"task_name" binding:"required"`
 	TaskDetail string `json:"task_detail" binding:"required"`
 }
 
-// all task will show
+// get all task
 func AllTasks(c *gin.Context) {
 	var tasks []models.Task
 	database.DB.Find(&tasks)
@@ -33,7 +31,6 @@ func AllTasks(c *gin.Context) {
 
 // create task
 func CreateTask(c *gin.Context) {
-	// Validate input
 	var input CreateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -45,12 +42,13 @@ func CreateTask(c *gin.Context) {
 	task := models.Task{TaskName: input.TaskName, TaskDetail: input.TaskDetail, Date: currentTime.Format("2006.01.02 15:04:05")}
 	database.DB.Create(&task)
 
+	// return created task
 	c.JSON(http.StatusOK, gin.H{"data": task})
 
 }
 
-// find task
-func FindTask(c *gin.Context) { // Get model if exist
+// find task particular task by id
+func FindTask(c *gin.Context) {
 	var task models.Task
 	fmt.Println(c.Request.URL.Query())
 	id := c.Request.URL.Query().Get("id")
@@ -63,8 +61,8 @@ func FindTask(c *gin.Context) { // Get model if exist
 
 }
 
+// update task by id
 func UpdateTask(c *gin.Context) {
-	// Get model if exist
 	var task models.Task
 	id := c.Request.URL.Query().Get("id")
 	if err := database.DB.Where("id = ?", id).First(&task).Error; err != nil {
@@ -72,7 +70,6 @@ func UpdateTask(c *gin.Context) {
 		return
 	}
 
-	// Validate input
 	var input UpdateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -84,7 +81,8 @@ func UpdateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": task})
 }
 
-func DeleteUser(c *gin.Context) {
+// delete Task
+func DeleteTask(c *gin.Context) {
 	var task models.Task
 	id := c.Request.URL.Query().Get("id")
 	database.DB.First(&task, id)

@@ -14,4 +14,15 @@ content-type: application/json
     "email": "hw@go.com",
     "password": "hello5789"
 }
+
+{
+    "name": "vk",
+    "username": "VKworld",
+    "email": "fy@go.com",
+    "password": "vkmworld5789"
+}
+{
+    "email": "fy@go.com",
+    "password": "vkmworld5789"
+}
 ###
