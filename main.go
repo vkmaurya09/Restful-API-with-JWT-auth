@@ -3,12 +3,27 @@ package main
 import (
 	"restapi-auth/controllers"
 	"restapi-auth/database"
+	"restapi-auth/docs"
 	"restapi-auth/middlewares"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files" // swagger embed files
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @securityDefinitions.apikey bearerAuth
+// @in header
+// @name Authorization
 func main() {
+
+	// swagger 2.0 Meta Information
+	docs.SwaggerInfo.Title = "Task Management System"
+	docs.SwaggerInfo.Description = "Crud API in Go Gin"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "localhost:8080"
+	docs.SwaggerInfo.BasePath = "/api"
+	docs.SwaggerInfo.Schemes = []string{"http"}
+
 	// connect database
 	database.ConnectDatabase()
 	// initilize all routes
@@ -19,7 +34,7 @@ func main() {
 func initRouter() *gin.Engine {
 	router := gin.Default()
 	// routes
-	api := router.Group("/api")
+	api := router.Group(docs.SwaggerInfo.BasePath)
 	{
 		// to register new user
 		api.POST("/user/register", controllers.RegisterUser)
@@ -41,5 +56,7 @@ func initRouter() *gin.Engine {
 
 		}
 	}
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	return router
 }

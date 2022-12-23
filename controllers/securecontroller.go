@@ -1,14 +1,19 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"restapi-auth/database"
 	"restapi-auth/models"
+
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 )
+
+// pATH Information
 
 // create task struct
 type CreateTaskInput struct {
@@ -22,14 +27,58 @@ type UpdateTaskInput struct {
 	TaskDetail string `json:"task_detail" binding:"required"`
 }
 
-// get all task
+// AllTasks godoc
+// @Security bearerAuth
+// @Summary Show all tasks
+// @Description Get all tasks
+// @Accept  json
+// @Produce json
+// @Success 200 {array} models.Task
+// @Router  /secured/tasks [get]
 func AllTasks(c *gin.Context) {
+	// connection to redis
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
 	var tasks []models.Task
-	database.DB.Find(&tasks)
-	c.JSON(http.StatusOK, gin.H{"data": tasks})
+	val, err := client.Get("tasks").Result()
+	if err == nil {
+		json.Unmarshal([]byte(val), &tasks)
+		if err != nil {
+			panic(err)
+		}
+		c.JSON(http.StatusOK, gin.H{"data from redis": tasks})
+	} else {
+		database.DB.Find(&tasks)
+		json, err := json.Marshal(tasks)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		err = client.Set("tasks", json, time.Minute).Err()
+		if err != nil {
+			fmt.Println(err)
+		}
+		c.JSON(http.StatusOK, gin.H{"data from db": tasks})
+		return
+	}
+
+	// fmt.Println(val)
+
 }
 
-// create task
+// CreateTask godoc
+// @Security bearerAuth
+// @Summary Create new tasks
+// @Description create tasks
+// @Accept json
+// @Produce json
+// @Param task body CreateTaskInput true "Create task"
+// @Success 200 {object} models.Task
+// @Router  /secured/tasks [post]t]
 func CreateTask(c *gin.Context) {
 	var input CreateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -47,21 +96,65 @@ func CreateTask(c *gin.Context) {
 
 }
 
-// find task particular task by id
+// FindTask godoc
+// @Security bearerAuth
+// @Summary Find Single Task
+// @Description Find single task
+// @Accept json
+// @Produce json
+// @Param  id query int true "task Id"
+// @Success 200 {object} models.Task
+// @Router  /secured/tasks/one [get]
 func FindTask(c *gin.Context) {
+	// connection to redis
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+
+	// task := models.Task{}
 	var task models.Task
-	fmt.Println(c.Request.URL.Query())
 	id := c.Request.URL.Query().Get("id")
-	if err := database.DB.Where("id = ?", id).First(&task).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+	val, err := client.Get(id).Result()
+	if err == nil {
+		json.Unmarshal([]byte(val), &id)
+		if err != nil {
+			panic(err)
+		}
+		// return from redis
+		c.JSON(http.StatusOK, gin.H{"data from redis": val})
+	} else {
+		if err := database.DB.Where("id = ?", id).First(&task).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+			return
+		}
+		// marshal json
+		json, err := json.Marshal(task)
+		if err != nil {
+			fmt.Println(err)
+		}
+		// save json by id in redis
+		err = client.Set("id", json, time.Minute).Err()
+		if err != nil {
+			fmt.Println(err)
+		}
+		// return from db
+		c.JSON(http.StatusOK, gin.H{"data from db": task})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"data": task})
-
 }
 
-// update task by id
+// UpdateTask godoc
+// @Security bearerAuth
+// @Summary Update task
+// @Description Update tasks
+// @Accept json
+// @Produce json
+// @Param  id query int true "task Id"
+// @Param task body UpdateTaskInput true "Update task"
+// @Success 200 {object} models.Task
+// @Router  /secured/tasks/update [put]
 func UpdateTask(c *gin.Context) {
 	var task models.Task
 	id := c.Request.URL.Query().Get("id")
@@ -81,7 +174,15 @@ func UpdateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": task})
 }
 
-// delete Task
+// DeleteTask godoc
+// @Security bearerAuth
+// @Summary delete task
+// @Description delete task
+// @Accept json
+// @Produce json
+// @Param  id query int true "task Id"
+// @Success 200 {object} models.Task
+// @Router  /secured/tasks/delete [delete]
 func DeleteTask(c *gin.Context) {
 	var task models.Task
 	id := c.Request.URL.Query().Get("id")
@@ -89,8 +190,8 @@ func DeleteTask(c *gin.Context) {
 	if err := database.DB.Where("id = ?", id).First(&task).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
 		return
-	} else {
-		database.DB.Delete(&task)
-		c.JSON(200, gin.H{"success": "Task#" + id + " deleted"})
 	}
+	database.DB.Delete(&task)
+	c.JSON(200, gin.H{"success": "Task " + id + " deleted"})
+
 }

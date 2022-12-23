@@ -1,0 +1,181 @@
+definitions:
+  controllers.CreateTaskInput:
+    properties:
+      task_detail:
+        type: string
+      task_name:
+        type: string
+    required:
+    - task_detail
+    - task_name
+    type: object
+  controllers.JWTToken:
+    properties:
+      token:
+        type: string
+    type: object
+  controllers.TokenRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  controllers.UpdateTaskInput:
+    properties:
+      task_detail:
+        type: string
+      task_name:
+        type: string
+    required:
+    - task_detail
+    - task_name
+    type: object
+  models.Task:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      task_detail:
+        type: string
+      task_name:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /secured/tasks:
+    get:
+      consumes:
+      - application/json
+      description: Get all tasks
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Task'
+            type: array
+      security:
+      - bearerAuth: []
+      summary: Show all tasks
+    post:
+      consumes:
+      - application/json
+      description: create tasks
+      parameters:
+      - description: Create task
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.CreateTaskInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+      security:
+      - bearerAuth: []
+      summary: Create new tasks
+  /secured/tasks/delete:
+    delete:
+      consumes:
+      - application/json
+      description: delete task
+      parameters:
+      - description: task Id
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+      security:
+      - bearerAuth: []
+      summary: delete task
+  /secured/tasks/one:
+    get:
+      consumes:
+      - application/json
+      description: Find single task
+      parameters:
+      - description: task Id
+        in: query
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+      security:
+      - bearerAuth: []
+      summary: Find Single Task
+  /secured/tasks/update:
+    put:
+      consumes:
+      - application/json
+      description: Update tasks
+      parameters:
+      - description: task Id
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Update task
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.UpdateTaskInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Task'
+      security:
+      - bearerAuth: []
+      summary: Update task
+  /user/token:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and provides a JWT to Authorize API calls
+      operationId: Authentication
+      parameters:
+      - description: Email email, Password password
+        in: body
+        name: '{email,password}'
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.TokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.JWTToken'
+      summary: Provides a JSON Web Token
+securityDefinitions:
+  bearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
