@@ -5,7 +5,7 @@
 
 ## Prerequisites
 - Golang - Programming Language
-- Gorm & MySQL - Gorm i used for connection to database
+- Gorm & MySQL - Gorm is used for connection to database
 - Redis - Redis is used as Cache memory
 - JWT - JWT Authorization
 - Swagger - API dcoumentation and Testing
